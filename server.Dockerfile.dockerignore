@@ -1,0 +1,13 @@
+# Docker Related
+*Dockerfile
+*.dockerignore
+.devcontainer
+*.docker-compose.yaml
+
+# Git Related
+makefile
+.git
+.gitignore
+
+# Unnecessary
+readme-studio

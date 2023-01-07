@@ -1,0 +1,26 @@
+{
+  "name": "Readme Studio Devcontainer",
+  "workspaceFolder": "/app",
+  "dockerComposeFile": [
+    "../dev.docker-compose.yaml"
+  ],
+  "service": "dev",
+  "settings": {
+    "terminal.integrated.defaultProfile.linux": "ash",
+    "terminal.integrated.profiles.linux": {
+      "sh": {
+        "path": "sh"
+      },
+      "ash": {
+        "path": "ash"
+      }
+    }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "golang.go"
+      ]
+    }
+  }
+}

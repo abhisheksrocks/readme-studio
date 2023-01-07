@@ -1,0 +1,14 @@
+version: '3.9'
+
+name: "Readme Studio Docker Compose"
+services:
+  dev:
+    container_name: readme-studio-container
+    build:
+      dockerfile: dev.Dockerfile
+    working_dir: /app
+    volumes:
+      - type: bind
+        source: .
+        target: /app
+    command: sleep infinity
