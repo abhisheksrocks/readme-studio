@@ -1,12 +1,12 @@
 {
   "name": "Readme Studio Devcontainer",
-  "workspaceFolder": "/app",
+  "workspaceFolder": "/readme-studio",
   "dockerComposeFile": [
     "../dev.docker-compose.yaml"
   ],
   "service": "dev",
   "settings": {
-    "terminal.integrated.defaultProfile.linux": "ash",
+    "terminal.integrated.defaultProfile.linux": "sh",
     "terminal.integrated.profiles.linux": {
       "sh": {
         "path": "sh"
@@ -18,6 +18,16 @@
   },
   "customizations": {
     "vscode": {
+      "settings": {
+        "files.exclude": {
+          "**/.git": true,
+          "**/.svn": true,
+          "**/.hg": true,
+          "**/CVS": true,
+          "**/.DS_Store": true,
+          "**/Thumbs.db": true
+        }
+      },
       "extensions": [
         "golang.go"
       ]

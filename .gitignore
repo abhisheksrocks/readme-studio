@@ -1,2 +1,11 @@
+#Secrets
+.env
+
 # Unnecessary
 readme-studio
+
+.svn
+.hg
+CVS
+.DS_Store
+Thumbs.db

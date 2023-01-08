@@ -6,9 +6,9 @@ services:
     container_name: readme-studio-container
     build:
       dockerfile: dev.Dockerfile
-    working_dir: /app
+    working_dir: /readme-studio
     volumes:
       - type: bind
         source: .
-        target: /app
+        target: /readme-studio
     command: sleep infinity

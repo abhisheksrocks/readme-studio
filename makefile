@@ -1,8 +1,9 @@
 # If you are using Visual Studio Code for development,
 # you can start by re-launching this folder as a Docker container.
 # All necessary configurations are already provided in the [.devcontainer] directory. 
-# If you are new to this, you can follow this video tutorial to get started: 
-# [youtube video link here]
+# If you are new to this, you can follow these links: 
+# https://www.youtube.com/watch?v=zkMRWDQV4Tg
+# https://www.youtube.com/playlist?list=PLj6YeMhvp2S5G_X6ZyMc8gfXPMFPg3O31
 
 # OR
 
@@ -10,10 +11,14 @@
 
 server_image_name := readme-studio-image
 dev_image_name := readmestudiodockercompose-dev
+devcontainer_image_name := readme-studio-dev
 
 container_name := readme-studio-container
 
 ls_dangling_cmd := docker images -f "dangling=true"
+
+# Handy run command
+all: run
 
 dev:
 	docker compose -f dev.docker-compose.yaml up dev --detach
@@ -25,14 +30,32 @@ server:
 	docker build -t ${server_image_name} -f server.Dockerfile .
 	docker run --name ${container_name} ${server_image_name}
 
+run:
+	go run main.go
+
 dangling_list:
 	${ls_dangling_cmd}
 
-# This command will clean most images & containers
+# This command will clean most images & containers created during the process
 clean: 
 	-docker compose -f dev.docker-compose.yaml down
 	-docker stop ${container_name}
 	-docker rm ${container_name}
 	-docker rmi ${dev_image_name}
+	-docker rmi ${devcontainer_image_name}
 	-docker rmi ${server_image_name}
 	-docker rmi `${ls_dangling_cmd} -q`
+
+
+
+
+
+
+
+
+
+
+# ***********************************************************************
+# To learn making 'makefile', you can can explore the following website:-
+# https://makefiletutorial.com
+# ***********************************************************************
