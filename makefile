@@ -31,7 +31,7 @@ server:
 	docker run --name ${container_name} ${server_image_name}
 
 run:
-	go run main.go
+	go run .
 
 dangling_list:
 	${ls_dangling_cmd}
