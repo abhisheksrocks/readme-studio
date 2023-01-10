@@ -101,7 +101,7 @@ func main() {
 
 	request, err := http.NewRequest(http.MethodPost, APIEndpoint, bytes.NewBuffer(jsonValue))
 	request.Header.Add("Content-Type", "application/json")
-	request.Header.Add("Authorization", "bearer "+readEnv.getCacheValue())
+	request.Header.Add("Authorization", "bearer "+readEnv.GetCacheValue())
 	if err != nil {
 		fmt.Printf("The HTTP request failed with error %s\n", err)
 	}

@@ -21,11 +21,11 @@ const (
 	ReadEnvErrorExampleFileNotFound = "example file not found"
 )
 
-func (e ReadEnv) getCacheValue() string {
+func (e ReadEnv) GetCacheValue() string {
 	return e.KeyVal.Val
 }
 
-func (e *ReadEnv) getValue() (string, error) {
+func (e *ReadEnv) GetValue() (string, error) {
 	v := os.Getenv(e.KeyVal.Key)
 	if v == "" {
 		return "", errors.New(ReadEnvErrorValueNotFound)
@@ -66,7 +66,7 @@ func NewReadEnv(envPath string, exampleEnvPath string, key string, usedFor strin
 		}
 	}
 
-	_, err = r.getValue()
+	_, err = r.GetValue()
 
 	return r, err
 }
