@@ -36,7 +36,7 @@ run:
 dangling_list:
 	${ls_dangling_cmd}
 
-# This command will clean most images & containers created during the process
+# This command will clean most images, containers and volumes created during the process
 clean: 
 	-docker compose -f dev.docker-compose.yaml down
 	-docker stop ${container_name}
@@ -45,6 +45,7 @@ clean:
 	-docker rmi ${devcontainer_image_name}
 	-docker rmi ${server_image_name}
 	-docker rmi `${ls_dangling_cmd} -q`
+	-docker volume prune --force
 
 
 
