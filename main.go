@@ -40,7 +40,12 @@ func main() {
 	envFileLocation := filepath.Join(location, EnvFile)
 	exampleEnvFileLocation := filepath.Join(location, ExampleEnvFile)
 
-	readEnv, err := NewReadEnv(envFileLocation, exampleEnvFileLocation, GithubTokenEnvKey, GithubTokenEnvKeyHelperText)
+	keyData := EnvKey{
+		Key:     GithubTokenEnvKey,
+		UsedFor: GithubTokenEnvKeyHelperText,
+	}
+
+	readEnv, err := NewReadEnv(envFileLocation, exampleEnvFileLocation, keyData, &DefReadEnvEnvironment{})
 	if err != nil {
 		switch err.Error() {
 		case ReadEnvErrorExampleFileNotFound:
@@ -54,9 +59,9 @@ func main() {
 				"\n\tis already present in system environment variables\n")
 
 		case ReadEnvErrorValueNotFound:
-			defPrint := "\n\tCouldn't read value for key \"" + readEnv.KeyVal.Key + "\" from environment variables" +
+			defPrint := "\n\tCouldn't read value for key \"" + readEnv.KeyVal.KeyData.Key + "\" from environment variables" +
 				"\n\tHere's something that may explain its use:" +
-				"\n\n\t" + readEnv.KeyVal.UsedFor
+				"\n\n\t" + readEnv.KeyVal.KeyData.UsedFor
 
 			if notEmpty(readEnv.ExampleFilePath) {
 				log.Fatalln(defPrint + "\n\tUse \"" + readEnv.ExampleFilePath + "\" file for reference")
@@ -101,7 +106,7 @@ func main() {
 
 	request, err := http.NewRequest(http.MethodPost, APIEndpoint, bytes.NewBuffer(jsonValue))
 	request.Header.Add("Content-Type", "application/json")
-	request.Header.Add("Authorization", "bearer "+readEnv.GetCacheValue())
+	request.Header.Add("Authorization", "bearer "+readEnv.KeyVal.GetCacheValue())
 	if err != nil {
 		fmt.Printf("The HTTP request failed with error %s\n", err)
 	}

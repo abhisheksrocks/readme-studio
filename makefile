@@ -20,6 +20,18 @@ ls_dangling_cmd := docker images -f "dangling=true"
 # Handy run command
 all: run
 
+build:
+	go build -o bin/readme-studio
+
+run: build
+	./bin/readme-studio
+
+test:
+	go test -v --cover ./...
+
+mockgen:
+	mockery --all
+
 dev:
 	docker compose -f dev.docker-compose.yaml up dev --detach
 
@@ -30,8 +42,6 @@ server:
 	docker build -t ${server_image_name} -f server.Dockerfile .
 	docker run --name ${container_name} ${server_image_name}
 
-run:
-	go run .
 
 dangling_list:
 	${ls_dangling_cmd}

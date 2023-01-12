@@ -1,4 +1,4 @@
-FROM golang:1.19.4-alpine3.17
+FROM golang:1.19.5-alpine3.17
 
 # Some basic features
 RUN apk --no-cache add git
@@ -13,11 +13,15 @@ RUN go install golang.org/x/tools/gopls@v0.11.0
 RUN go install github.com/go-delve/delve/cmd/dlv@v1.20.1
 RUN go install honnef.co/go/tools/cmd/staticcheck@2022.1.3
 
+# To generate mocks for us
+RUN go install github.com/vektra/mockery/v2@v2.16.0
+
 WORKDIR /readme-studio
 
 COPY . .
 
 # The following are the program dependencies
 RUN go get github.com/joho/godotenv@v1.4.0
+RUN go get github.com/stretchr/testify@v1.8.1
 
 CMD go run .
