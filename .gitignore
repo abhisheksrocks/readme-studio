@@ -3,7 +3,8 @@
 
 # Unnecessary
 readme-studio
-*/bin/
+bin/
+tmp/*
 
 .svn
 .hg

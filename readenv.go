@@ -41,12 +41,14 @@ type envKeyValue struct {
 	environment ReadEnvEnvironment
 }
 
+type ReadEnvError string
+
 const (
-	ReadEnvErrorUndefined           = "unknown error"
-	ReadEnvErrorInvalidKey          = "invalid key"
-	ReadEnvErrorValueNotFound       = "value not found"
-	ReadEnvErrorFileNotFound        = "file not found"
-	ReadEnvErrorExampleFileNotFound = "example file not found"
+	ReadEnvErrorUndefined           ReadEnvError = "unknown error"
+	ReadEnvErrorInvalidKey          ReadEnvError = "invalid key"
+	ReadEnvErrorValueNotFound       ReadEnvError = "value not found"
+	ReadEnvErrorFileNotFound        ReadEnvError = "file not found"
+	ReadEnvErrorExampleFileNotFound ReadEnvError = "example file not found"
 )
 
 func (e envKeyValue) GetCacheValue() string {
@@ -55,11 +57,11 @@ func (e envKeyValue) GetCacheValue() string {
 
 func (e *envKeyValue) GetValue() (string, error) {
 	if empty(e.KeyData.Key) {
-		return "", errors.New(ReadEnvErrorInvalidKey)
+		return "", errors.New(string(ReadEnvErrorInvalidKey))
 	}
 	v := e.environment.Getenv(e.KeyData.Key)
 	if empty(v) {
-		return "", errors.New(ReadEnvErrorValueNotFound)
+		return "", errors.New(string(ReadEnvErrorValueNotFound))
 	}
 	e.val = v
 	return v, nil
@@ -71,33 +73,35 @@ type ReadEnv struct {
 	KeyVal          *envKeyValue
 }
 
-func NewReadEnv(envPath string, exampleEnvPath string, key EnvKey, environment ReadEnvEnvironment) (r *ReadEnv, err error) {
-	r = &ReadEnv{
+func NewReadEnv(envPath string, exampleEnvPath string, key EnvKey, environment ReadEnvEnvironment) (*ReadEnv, error) {
+
+	if notEmpty(exampleEnvPath) {
+		if !environment.FileExist(exampleEnvPath) {
+			return nil, errors.New(string(ReadEnvErrorExampleFileNotFound))
+		}
+	}
+
+	if notEmpty(envPath) {
+		err := environment.Load(envPath)
+		if err != nil {
+			return nil, errors.New(string(ReadEnvErrorFileNotFound))
+		}
+	}
+
+	keyValueData := envKeyValue{
+		KeyData:     key,
+		val:         "",
+		environment: environment,
+	}
+
+	_, err := keyValueData.GetValue()
+	if err != nil {
+		return nil, err
+	}
+
+	return &ReadEnv{
 		FilePath:        envPath,
 		ExampleFilePath: exampleEnvPath,
-		KeyVal: &envKeyValue{
-			KeyData:     key,
-			val:         "",
-			environment: environment,
-		},
-	}
-
-	if notEmpty(r.ExampleFilePath) {
-		if !environment.FileExist(r.ExampleFilePath) {
-			err = errors.New(ReadEnvErrorExampleFileNotFound)
-			return r, err
-		}
-	}
-
-	if notEmpty(r.FilePath) {
-		err = environment.Load(r.FilePath)
-		if err != nil {
-			err = errors.New(ReadEnvErrorFileNotFound)
-			return r, err
-		}
-	}
-
-	_, err = r.KeyVal.GetValue()
-
-	return r, err
+		KeyVal:          &keyValueData,
+	}, err
 }

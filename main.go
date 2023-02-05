@@ -1,15 +1,11 @@
 package main
 
 import (
-	"bytes"
 	"encoding/json"
-	"fmt"
-	"io"
 	"log"
 	"net/http"
 	"os"
 	"path/filepath"
-	"time"
 )
 
 const APIEndpoint = "https://api.github.com/graphql"
@@ -27,8 +23,14 @@ const (
 		"\n\n\tWhile generating your token, no permissions or scopes are required.\n"
 )
 
-func main() {
+func commonRequestHeaders(readEnv *ReadEnv) []RequestHeader {
+	return []RequestHeader{
+		makeDefaultContentTypeHeader(),
+		makeAuthorizationHeader(readEnv.KeyVal.GetCacheValue()),
+	}
+}
 
+func main() {
 	// Get current location path
 	location, err := os.Getwd()
 	if err != nil {
@@ -45,29 +47,29 @@ func main() {
 		UsedFor: GithubTokenEnvKeyHelperText,
 	}
 
-	readEnv, err := NewReadEnv(envFileLocation, exampleEnvFileLocation, keyData, &DefReadEnvEnvironment{})
+	readEnv, err := NewReadEnv(envFileLocation, exampleEnvFileLocation, keyData, new(DefReadEnvEnvironment))
 	if err != nil {
 		switch err.Error() {
-		case ReadEnvErrorExampleFileNotFound:
+		case string(ReadEnvErrorExampleFileNotFound):
 			log.Fatalln("\n\tCouldn't find \"" + readEnv.ExampleFilePath + "\"" +
 				"\n\n\tTIP: It is not mandatory to have an example file. So you can skip this." +
 				"\n\tBut it is a good idea to always provide one for ease of use\n")
 
-		case ReadEnvErrorFileNotFound:
+		case string(ReadEnvErrorFileNotFound):
 			log.Fatalln("\n\tCouldn't load \"" + readEnv.FilePath + "\"" +
 				"\n\n\tTip: You don't necessarily have to pass this value, if the value" +
 				"\n\tis already present in system environment variables\n")
 
-		case ReadEnvErrorValueNotFound:
-			defPrint := "\n\tCouldn't read value for key \"" + readEnv.KeyVal.KeyData.Key + "\" from environment variables" +
-				"\n\tHere's something that may explain its use:" +
-				"\n\n\t" + readEnv.KeyVal.KeyData.UsedFor
-
-			if notEmpty(readEnv.ExampleFilePath) {
-				log.Fatalln(defPrint + "\n\tUse \"" + readEnv.ExampleFilePath + "\" file for reference")
-			} else {
-				log.Fatalln(defPrint)
+		case string(ReadEnvErrorValueNotFound):
+			defPrint := "\n\tCouldn't read value for key \"" + readEnv.KeyVal.KeyData.Key + "\" from environment variables"
+			if notEmpty(readEnv.KeyVal.KeyData.UsedFor) {
+				defPrint += "\n\tHere's something that may explain its use:" +
+					"\n\n\t" + readEnv.KeyVal.KeyData.UsedFor
 			}
+			if notEmpty(readEnv.ExampleFilePath) {
+				defPrint += "\n\tUse \"" + readEnv.ExampleFilePath + "\" file for reference"
+			}
+			log.Fatalln(defPrint)
 
 		default:
 			log.Fatalln(err)
@@ -77,46 +79,17 @@ func main() {
 	username := "abhisheksrocks"
 	reponame := "async_button"
 
-	query := fmt.Sprintf(`
-		{
-			repository(name: "%s", owner: "%s") {
-				name
-				isArchived
-				description
-				parent {
-					nameWithOwner
-				}
-				languages(first: 1, orderBy: {field: SIZE, direction: DESC}) {
-					nodes {
-						name
-						color
-					}
-				}
-				stargazerCount
-				forkCount
-			}
-		}
-	`, reponame, username)
+	var queryResult GithubResultModel[GithubRepositoryCardModel]
+	query := queryResult.Data.makeQuery(reponame, username)
 
-	body := map[string]string{
-		"query": query,
+	returnedError := makeRequest(APIEndpoint, query, commonRequestHeaders(readEnv),
+		new(http.Client), &queryResult)
+
+	if returnedError != nil {
+		res, _ := json.MarshalIndent(returnedError, "", "    ")
+		log.Println(string(res))
+	} else {
+		res, _ := json.MarshalIndent(queryResult, "", "    ")
+		log.Println(string(res))
 	}
-
-	jsonValue, _ := json.Marshal(body)
-
-	request, err := http.NewRequest(http.MethodPost, APIEndpoint, bytes.NewBuffer(jsonValue))
-	request.Header.Add("Content-Type", "application/json")
-	request.Header.Add("Authorization", "bearer "+readEnv.KeyVal.GetCacheValue())
-	if err != nil {
-		fmt.Printf("The HTTP request failed with error %s\n", err)
-	}
-	client := &http.Client{Timeout: time.Second * 10}
-
-	response, err := client.Do(request)
-	if err != nil {
-		fmt.Printf("The HTTP request failed with error %s\n", err)
-	}
-	defer response.Body.Close()
-	data, _ := io.ReadAll(response.Body)
-	fmt.Println(string(data))
 }

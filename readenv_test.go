@@ -77,7 +77,7 @@ func (uts *UnitTestReadEnvSuite) TestNewReadEnv() {
 				asserts := assert.New(t)
 				// requires := require.New(t)
 				asserts.NotNil(err)
-				asserts.EqualError(err, main.ReadEnvErrorFileNotFound)
+				asserts.EqualError(err, string(main.ReadEnvErrorFileNotFound))
 			},
 		},
 		{
@@ -113,7 +113,7 @@ func (uts *UnitTestReadEnvSuite) TestNewReadEnv() {
 				asserts := assert.New(t)
 				// requires := require.New(t)
 				asserts.NotNil(err)
-				asserts.EqualError(err, main.ReadEnvErrorValueNotFound)
+				asserts.EqualError(err, string(main.ReadEnvErrorValueNotFound))
 			},
 		},
 		{
@@ -128,7 +128,7 @@ func (uts *UnitTestReadEnvSuite) TestNewReadEnv() {
 				asserts := assert.New(t)
 				// requires := require.New(t)
 				asserts.NotNil(err)
-				asserts.EqualError(err, main.ReadEnvErrorExampleFileNotFound)
+				asserts.EqualError(err, string(main.ReadEnvErrorExampleFileNotFound))
 			},
 		},
 		{
@@ -179,7 +179,7 @@ func (uts *UnitTestReadEnvSuite) TestNewReadEnv() {
 				asserts := assert.New(t)
 				// requires := require.New(t)
 				asserts.NotNil(err)
-				asserts.EqualError(err, main.ReadEnvErrorExampleFileNotFound)
+				asserts.EqualError(err, string(main.ReadEnvErrorExampleFileNotFound))
 			},
 		},
 		{
@@ -197,7 +197,7 @@ func (uts *UnitTestReadEnvSuite) TestNewReadEnv() {
 				asserts := assert.New(t)
 				// requires := require.New(t)
 				asserts.NotNil(err)
-				asserts.EqualError(err, main.ReadEnvErrorValueNotFound)
+				asserts.EqualError(err, string(main.ReadEnvErrorValueNotFound))
 			},
 		},
 		{
@@ -215,7 +215,7 @@ func (uts *UnitTestReadEnvSuite) TestNewReadEnv() {
 				asserts := assert.New(t)
 				// requires := require.New(t)
 				asserts.NotNil(err)
-				asserts.EqualError(err, main.ReadEnvErrorInvalidKey)
+				asserts.EqualError(err, string(main.ReadEnvErrorInvalidKey))
 			},
 		},
 		{
@@ -252,10 +252,11 @@ func (uts *UnitTestReadEnvSuite) TestNewReadEnv() {
 			t.Parallel()
 
 			// Arrange
-			mocker := mocks.ReadEnvEnvironment{}
+			// mocker := mocks.ReadEnvEnvironment{}
+			mocker := new(mocks.ReadEnvEnvironment)
 
 			if arrangeFunc != nil {
-				arrangeFunc(t, &mocker)
+				arrangeFunc(t, mocker)
 			}
 
 			mocker.On(mockFunctionNameFileExist, validExampleFilePath).Return(true)
@@ -273,7 +274,7 @@ func (uts *UnitTestReadEnvSuite) TestNewReadEnv() {
 			mocker.AssertNotCalled(t, mockFunctionNameLoad, emptyExampleFilePath)
 
 			// Act
-			reVal, err := main.NewReadEnv(path, examplePath, keyData, &mocker)
+			reVal, err := main.NewReadEnv(path, examplePath, keyData, mocker)
 
 			// Assert
 			if assertFunc != nil {
@@ -302,13 +303,14 @@ func (its *IntTestReadEnvSuite) SetupSuite() {
 		return
 	}
 
-	err = os.Mkdir(filepath.Join(location, tmpFileDirectoryName), os.ModePerm)
+	its.tempDirectoryPath = filepath.Join(location, tmpFileDirectoryName)
+	os.RemoveAll(its.tempDirectoryPath)
+	err = os.Mkdir(its.tempDirectoryPath, os.ModePerm)
 	if err != nil {
 		its.T().Log("err:\n", err)
 		its.T().Skipf("Cound't create temporary directory!")
 		return
 	}
-	its.tempDirectoryPath = filepath.Join(location, tmpFileDirectoryName)
 
 	intTests = []intTestData{
 		{
@@ -330,7 +332,7 @@ func (its *IntTestReadEnvSuite) SetupSuite() {
 			},
 			assertions: func(its *IntTestReadEnvSuite, intTestData intTestData, result *main.ReadEnv, err error) {
 				its.NotNil(err)
-				its.EqualError(err, main.ReadEnvErrorFileNotFound)
+				its.EqualError(err, string(main.ReadEnvErrorFileNotFound))
 			},
 			// cleanup: func(its *IntTestReadEnvSuite, intTestData intTestData) {
 			// 	os.Remove(intTestData.exampleEnvFilePath)
@@ -383,7 +385,7 @@ func (its *IntTestReadEnvSuite) SetupSuite() {
 			},
 			assertions: func(its *IntTestReadEnvSuite, intTestData intTestData, result *main.ReadEnv, err error) {
 				its.NotNil(err)
-				its.EqualError(err, main.ReadEnvErrorValueNotFound)
+				its.EqualError(err, string(main.ReadEnvErrorValueNotFound))
 			},
 			// cleanup: func(its *IntTestReadEnvSuite, intTestData intTestData) {
 			// 	os.Remove(intTestData.exampleEnvFilePath)
@@ -407,7 +409,7 @@ func (its *IntTestReadEnvSuite) SetupSuite() {
 			},
 			assertions: func(its *IntTestReadEnvSuite, intTestData intTestData, result *main.ReadEnv, err error) {
 				its.NotNil(err)
-				its.EqualError(err, main.ReadEnvErrorExampleFileNotFound)
+				its.EqualError(err, string(main.ReadEnvErrorExampleFileNotFound))
 			},
 		},
 		{
@@ -423,6 +425,7 @@ func (its *IntTestReadEnvSuite) SetupSuite() {
 					its.T().Skipf("Cound't create file")
 					return
 				}
+				defer file.Close()
 				file.WriteString(intTestData.keyText + "=" + intTestData.valueText)
 			},
 			assertions: func(its *IntTestReadEnvSuite, intTestData intTestData, result *main.ReadEnv, err error) {
@@ -458,7 +461,7 @@ func (its *IntTestReadEnvSuite) SetupSuite() {
 			valueText:          emptyValue,
 			assertions: func(its *IntTestReadEnvSuite, intTestData intTestData, result *main.ReadEnv, err error) {
 				its.NotNil(err)
-				its.EqualError(err, main.ReadEnvErrorValueNotFound)
+				its.EqualError(err, string(main.ReadEnvErrorValueNotFound))
 			},
 		},
 		{
@@ -487,7 +490,7 @@ func (its *IntTestReadEnvSuite) SetupSuite() {
 			},
 			assertions: func(its *IntTestReadEnvSuite, intTestData intTestData, result *main.ReadEnv, err error) {
 				its.NotNil(err)
-				its.EqualError(err, main.ReadEnvErrorInvalidKey)
+				its.EqualError(err, string(main.ReadEnvErrorInvalidKey))
 			},
 		},
 	}
@@ -581,7 +584,7 @@ func (its *IntTestReadEnvSuite) Test_OnlyInvalidFilePath() {
 	reVal, err := main.NewReadEnv(refData.envFilePath, refData.exampleEnvFilePath, main.EnvKey{
 		Key:     refData.keyText,
 		UsedFor: usedForPlaceholder,
-	}, &main.DefReadEnvEnvironment{})
+	}, new(main.DefReadEnvEnvironment))
 
 	refData.assertions(its, refData, reVal, err)
 }
@@ -602,7 +605,7 @@ func (its *IntTestReadEnvSuite) Test_OnlyEmptyFilePath() {
 	reVal, err := main.NewReadEnv(refData.envFilePath, refData.exampleEnvFilePath, main.EnvKey{
 		Key:     refData.keyText,
 		UsedFor: usedForPlaceholder,
-	}, &main.DefReadEnvEnvironment{})
+	}, new(main.DefReadEnvEnvironment))
 
 	refData.assertions(its, refData, reVal, err)
 }
@@ -623,7 +626,7 @@ func (its *IntTestReadEnvSuite) Test_EmptyFilePathButNoDefaultSystemVariables() 
 	reVal, err := main.NewReadEnv(refData.envFilePath, refData.exampleEnvFilePath, main.EnvKey{
 		Key:     refData.keyText,
 		UsedFor: usedForPlaceholder,
-	}, &main.DefReadEnvEnvironment{})
+	}, new(main.DefReadEnvEnvironment))
 
 	refData.assertions(its, refData, reVal, err)
 }
@@ -644,7 +647,7 @@ func (its *IntTestReadEnvSuite) Test_OnlyInvalidExampleFilePath() {
 	reVal, err := main.NewReadEnv(refData.envFilePath, refData.exampleEnvFilePath, main.EnvKey{
 		Key:     refData.keyText,
 		UsedFor: usedForPlaceholder,
-	}, &main.DefReadEnvEnvironment{})
+	}, new(main.DefReadEnvEnvironment))
 
 	refData.assertions(its, refData, reVal, err)
 }
@@ -665,7 +668,7 @@ func (its *IntTestReadEnvSuite) Test_OnlyEmptyExampleFilePath() {
 	reVal, err := main.NewReadEnv(refData.envFilePath, refData.exampleEnvFilePath, main.EnvKey{
 		Key:     refData.keyText,
 		UsedFor: usedForPlaceholder,
-	}, &main.DefReadEnvEnvironment{})
+	}, new(main.DefReadEnvEnvironment))
 
 	refData.assertions(its, refData, reVal, err)
 }
@@ -686,7 +689,7 @@ func (its *IntTestReadEnvSuite) Test_EmptyPathsAndValidKeyAndValidValue() {
 	reVal, err := main.NewReadEnv(refData.envFilePath, refData.exampleEnvFilePath, main.EnvKey{
 		Key:     refData.keyText,
 		UsedFor: usedForPlaceholder,
-	}, &main.DefReadEnvEnvironment{})
+	}, new(main.DefReadEnvEnvironment))
 
 	refData.assertions(its, refData, reVal, err)
 }
@@ -707,7 +710,7 @@ func (its *IntTestReadEnvSuite) Test_EmptyPathsAndValidKeyButEmptyValue() {
 	reVal, err := main.NewReadEnv(refData.envFilePath, refData.exampleEnvFilePath, main.EnvKey{
 		Key:     refData.keyText,
 		UsedFor: usedForPlaceholder,
-	}, &main.DefReadEnvEnvironment{})
+	}, new(main.DefReadEnvEnvironment))
 
 	refData.assertions(its, refData, reVal, err)
 }
@@ -728,7 +731,7 @@ func (its *IntTestReadEnvSuite) Test_OnlyEmptyKey() {
 	reVal, err := main.NewReadEnv(refData.envFilePath, refData.exampleEnvFilePath, main.EnvKey{
 		Key:     refData.keyText,
 		UsedFor: usedForPlaceholder,
-	}, &main.DefReadEnvEnvironment{})
+	}, new(main.DefReadEnvEnvironment))
 
 	refData.assertions(its, refData, reVal, err)
 }
